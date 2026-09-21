@@ -4,6 +4,50 @@ from discord.ext import commands
 import random
 from config import token
 
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+# Oyuncuların Pokémon'larını tutan sözlük
+pokemons = {}
+
+@bot.event
+async def on_ready():
+    print(f'{bot.user} olarak giriş yapıldı!')
+
+@bot.command()
+async def pokemon_al(ctx):
+    """Oyuncuya rastgele Dövüşçü veya Sihirbaz Pokémon verir."""
+    poke_id = random.randint(1, 151)
+    
+    # Rastgele Sihirbaz veya Dövüşçü sınıfı seçimi
+    if random.choice([True, False]):
+        poke = Wizard(poke_id, ctx.author.name)
+        sinif_adi = "🔮 Sihirbaz"
+    else:
+        poke = Fighter(poke_id, ctx.author.name)
+        sinif_adi = "🥊 Dövüşçü"
+        
+    await poke.fetch_data()
+    pokemons[ctx.author.id] = poke
+    
+    embed = discord.Embed(title=f"Yeni Pokémon Kartı! ({sinif_adi})", description=poke.info(), color=discord.Color.green())
+    embed.set_image(url=poke.img_url)
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def savas(ctx, rakip: discord.Member):
+    """Etiketlenen rakip ile savaş başlatır: !savas @kullanici"""
+    if ctx.author.id not in pokemons or rakip.id not in pokemons:
+        await ctx.send("❌ Savaşabilmek için iki tarafın da önce `!pokemon_al` yapması gerekir!")
+        return
+
+    saldiran_poke = pokemons[ctx.author.id]
+    savunan_poke = pokemons[rakip.id]
+
+    savas_sonucu = await saldiran_poke.attack(savunan_poke)
+    await ctx.send(savas_sonucu)
+
 
 class Car:
     def __init__(self, brand: str, color: str):
