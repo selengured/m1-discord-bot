@@ -11,6 +11,30 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # Oyuncuların Pokémon'larını tutan sözlük
 pokemons = {}
 
+
+@bot.command()
+async def info(ctx):
+    # 2. Komutu gönderen kullanıcının bir Pokémon'u olup olmadığını kontrol edin
+    if ctx.author.name in Pokemon.pokemons:
+        # 3. Kullanıcının Pokémon'unu pokemons sözlüğünden alın
+        pok = Pokemon.pokemons[ctx.author.name]
+        
+        # 4. info() metodunu kullanarak Pokémon bilgilerini kanala gönderin
+        # (info metodu async ise 'await pok.info()' şeklinde çağırılır)
+        bilgi_mesaji = await pok.info() if hasattr(pok.info, '__await__') else pok.info()
+        await ctx.send(bilgi_mesaji)
+        
+        # Eğer varsa Pokémon görselini de gösterebilirsiniz:
+        image_url = await pok.show_img() if hasattr(pok, 'show_img') else None
+        if image_url:
+            embed = discord.Embed()
+            embed.set_image(url=image_url)
+            await ctx.send(embed=embed)
+    else:
+        await ctx.send("Henüz bir Pokémon'unuz yok! `!go` komutunu kullanarak bir Pokémon edinebilirsiniz.")
+
+
+
 @bot.event
 async def on_ready():
     print(f'{bot.user} olarak giriş yapıldı!')
